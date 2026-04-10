@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICARUS-7: TERMINALE DI EMERGENZA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="terminal-container">
+        <header class="terminal-header">
+            <span class="host">SYSTEM@ICARUS-7</span>
+            <span class="status">O2_LEVEL: 100%</span>
+            <span class="time">--:--</span>
+        </header>
+
+        <main class="terminal-content">
+            <div id="display-area">
+                
+                <section id="state-login" class="terminal-state active">
+                    <h2 class="matrix-glitch">IDENTIFICAZIONE EQUIPAGGIO</h2>
+                    <p class="typewriter">Inserire identificativo squadra per accedere ai sistemi vitali.</p>
+                    <div class="form-group">
+                        <input type="text" id="team-name" placeholder="ID_SQUADRA" autocomplete="off">
+                        <input type="number" id="team-size" placeholder="NUM_MEMBRI" min="1">
+                    </div>
+                    <button class="terminal-btn" id="login-btn">AUTENTICA</button>
+                </section>
+
+                <section id="state-intro" class="terminal-state">
+                    <h2 class="matrix-glitch">ACCESSO CONSENTITO</h2>
+                    <p class="typewriter">Sveglia, equipaggio della Icarus-7. Rilevato cedimento strutturale nel settore 4.</p>
+                    <p class="typewriter">Il generatore di ossigeno principale è stato compromesso e AURA l'AI di bordo è entrata in modalita di sicurezza estrema a causa di guasto critico.</p>
+                    <p class="typewriter error-text">TEMPO STIMATO ALL'ASFISSIA: 10 MINUTI.</p>
+                    <p class="typewriter">Se non inserisci i codici corretti, le paratie stagne rimarranno bloccate.</p>
+                    <p class="typewriter error-text">HAI 4 SFIDE!</p>
+                    <button class="terminal-btn start-btn">AVVIA SEQUENZA DI FUGA</button>
+                </section>
+
+                <section id="state-sfida1" class="terminal-state">
+                    <h3>PROTOCOLLO 1: IL SIGILLO DI INGRESSO</h3>
+                    <p class="typewriter">Le porte dell'ala abitativa sono bloccate. Risolvi l'enigma per forzare il sigillo idraulico:</p>
+                    <br>
+                    <p class="typewriter highlight">"Va nell'acqua e non si bagna, tra le spine e non si punge, entra in casa e non ci resta."</p>
+                    <br>
+                    <p class="typewriter">Traduci la soluzione in inglese (3 lettere).</p>
+                    <p class="typewriter">Prendi la posizione di ogni lettera nell'alfabeto (A=1, B=2...) e somma le decine con le unità finché non ottieni una sola cifra per lettera.</p>
+                    
+                    <button class="terminal-btn btn-danger" id="btn-indizio-1" onclick="showHint(1)">
+                        ANALISI CRITICA (COSTO: 1 MIN O2)
+                    </button>
+                    <p id="hint-1" class="typewriter error-text" style="display: none; margin-top: 15px; font-style: italic; font-weight: bold;"></p>
+                </section>
+
+                <section id="state-sfida2" class="terminal-state">
+                    <h3>PROTOCOLLO 2: IL NUCLEO DEL REATTORE</h3>
+                    <p class="typewriter success-text">>> LOG: Sigillo rimosso. L'aria nel corridoio A-1 è irrespirabile. Procedete al reattore.</p>
+                    <br>
+                    <p class="typewriter">Allarme radiazioni. Per attraversare la sala macchine dovete stabilizzare il nucleo.</p>
+                    <div class="enigma-visual">
+                        <div class="matrix-ring"></div>
+                        <div class="reattore-val">000</div>
+                    </div>
+                    <p class="typewriter">Calcola la frequenza di risonanza (F):</p>
+                    <p class="typewriter formula-text">F = √((4 * 3²) / 1)</p>
+                </section>
+
+                <section id="state-sfida3" class="terminal-state">
+                    <h3>PROTOCOLLO 3: ANALISI CAPSULE</h3>
+                    <p class="typewriter success-text">>> LOG: Stabilità termica al 40%. Radiazioni in calo. Accesso all'hangar capsule consentito.</p>
+                    <br>
+                    <p class="typewriter">I sistemi di eiezione sono danneggiati. Solo una capsula ha i motori integri.</p>
+                    <p class="typewriter alert-text">ATTENZIONE: Salire su una capsula fusa provocherà la decompressione immediata e la morte dell'equipaggio.</p>
+                    <div class="capsula-grid">
+                        <div class="capsula" onclick="selectCapsule('A')">CAPSULA_A</div>
+                        <div class="capsula" onclick="selectCapsule('B')">CAPSULA_B</div>
+                        <div class="capsula" onclick="selectCapsule('C')">CAPSULA_C</div>
+                    </div>
+                    <p class="typewriter highlight">Capsula A: Motori fusi.</p>
+                    <p class="typewriter highlight">Capsula C: Radiazioni gamma.</p>
+                    <p class="typewriter highlight">Capsula B: Funzionante.</p>
+                    <br>
+                    <p class="typewriter">Cartello sulla capsula B: "La capsula C non è pericolosa".</p>
+                    <p class="typewriter">Cartello sulla capsula C: "La capsula B è sicura".</p>
+                    <p class="typewriter">Sapendo che SOLO 1 affermazione è vera, clicca sulla capsula sicura.</p>
+                </section>
+
+                <section id="state-sfida4" class="terminal-state">
+                    <h3>PROTOCOLLO 4: COORDINATE TERRESTRI</h3>
+                    <p class="typewriter success-text">>> LOG: Motori della capsula agganciati. Sistemi vitali interni online. Speranza di ritorno: 87%.</p>
+                    <br>
+                    <p class="typewriter">Ultimo passaggio. Per sbloccare il portellone devi trovare il valore di V-I-T-A risolvendo questo sistema di equazioni logiche (Calcolatrice ammessa):</p>
+                    <br>
+                    <p class="typewriter">V -> è il numero che completa la serie logica: 2 - 6 - 12 - 20 - 30 - ?</p>
+                    <p class="typewriter">I -> rappresenta il numero di facce di un solido regolare che ha 12 spigoli e 8 vertici.</p>
+                    <p class="typewriter">T -> è il valore di "x" in questa proporzione spaziale: 4 : 8 = x : V</p>
+                    <p class="typewriter formula-text">A -> è il risultato di √(V + I + T + 12)</p>
+                    <br>
+                    <p class="typewriter highlight">La soluzione è la somma dei dati ottenuti (V + I + T + A) moltiplicata per 10.</p>
+                </section>
+
+                <section id="state-vittoria" class="terminal-state">
+                    <h2 class="success-text matrix-glitch">SEQUENZA COMPLETATA</h2>
+                    <p class="typewriter">>> LOG: Sequenza di eiezione avviata.</p>
+                    <p class="typewriter">Siete fuori dalla portata dell'esplosione. L'ICARUS-7 sta collassando.</p>
+                    <p class="typewriter highlight">Bentornati a casa, equipaggio.</p>
+                </section>
+
+                <section id="state-sconfitta" class="terminal-state">
+                    <h2 class="error-text matrix-glitch">MISSIONE FALLITA</h2>
+                    <p id="death-reason" class="typewriter">Nessun segno di vita rilevato. L'equipaggio è perduto nello spazio profondo.</p>
+                    <button class="terminal-btn btn-danger" onclick="location.reload()">RIAVVIA SIMULAZIONE</button>
+                </section>
+            </div>
+        </main>
+
+        <footer class="terminal-input" id="input-area">
+            <span class="prompt">ID@ICARUS:~$</span>
+            <input type="text" id="code-input" autocomplete="off" placeholder="INSERISCI CODICE...">
+            <button class="terminal-btn submit-btn" id="submit-code">ESEGUI</button>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
