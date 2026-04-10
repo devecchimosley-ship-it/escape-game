@@ -1,7 +1,7 @@
 let audioCtx;
 const codes = { sfida1: "135", sfida2: "6", sfida4: "780" };
 let currentState = 'login';
-let o2 = 25;
+let totalSeconds = 25 * 60; // 25 minuti convertiti in secondi
 let timer;
 let isTyping = false;
 
@@ -35,7 +35,6 @@ const sounds = {
 async function triggerStateTyping(stateId) {
     const paragraphs = document.querySelectorAll(`#${stateId} .typewriter`);
     
-    // 1. Salva il testo e svuota tutti i paragrafi
     paragraphs.forEach(p => {
         if (!p.getAttribute('data-text')) {
             p.setAttribute('data-text', p.innerText); 
@@ -43,9 +42,7 @@ async function triggerStateTyping(stateId) {
         p.innerText = ''; 
     });
 
-    // 2. Scrivi i paragrafi sequenzialmente
     for (let p of paragraphs) {
-        // Salta il paragrafo dell'indizio se è nascosto
         if (p.id.startsWith('hint-') && p.style.display === 'none') continue;
         await typeText(p);
     }
@@ -65,7 +62,7 @@ async function typeText(element) {
             if (char !== ' ') sounds.type();
         }
         
-        await new Promise(r => setTimeout(r, 20)); // Velocità di digitazione
+        await new Promise(r => setTimeout(r, 20)); 
     }
     isTyping = false;
 }
@@ -79,10 +76,8 @@ function changeState(newState) {
     next.classList.add('active');
     currentState = newState;
 
-    // Attiva la digitazione narrativa
     triggerStateTyping(`state-${newState}`);
 
-    // Gestione barra input
     const inputArea = document.getElementById('input-area');
     if (newState === 'sfida1' || newState === 'sfida2' || newState === 'sfida4') {
         inputArea.classList.add('active');
@@ -94,11 +89,12 @@ function changeState(newState) {
     if (newState === 'sfida2') simulateReactor();
 }
 
-// GESTIONE CAPSULE (MORTE ISTANTANEA P3)
+// GESTIONE CAPSULE 
 function selectCapsule(choice) {
-    if (isTyping) return; // Impedisce interazioni se sta ancora scrivendo
+    if (isTyping) return; 
 
-    if (choice === 'A') {
+    // FIX LOGICO: La risposta esatta in base al testo è la B, non la A.
+    if (choice === 'B') {
         sounds.success();
         changeState('sfida4');
     } else {
@@ -131,9 +127,10 @@ function checkCode() {
         sounds.error();
         document.getElementById('code-input').value = '';
         
-        // Penalità di tempo (-1 Minuto) per ogni codice sbagliato
-        o2 -= 1;
+        // Penalità di tempo (-60 secondi) per ogni codice sbagliato
+        totalSeconds -= 60;
         updateTimerDisplay();
+        checkTimeLimit();
     }
 }
 
@@ -145,48 +142,69 @@ async function showHint(level) {
         const hintBtn = document.getElementById('btn-indizio-1');
         const hintEl = document.getElementById('hint-1');
         
-        // Nasconde il pulsante
         hintBtn.style.display = 'none'; 
         
-        // Penalità O2
-        o2 -=5;
+        // Penalità O2 (-300 secondi / 5 min)
+        totalSeconds -= 300;
         updateTimerDisplay();
-        
-        // Suono d'allarme per l'ansia
         sounds.alarm(); 
         
-        const text = ">> Sotto i tuoi piedi, il pavimento della capsula trema mentre i motori tentano un ultimo avvio.\nUn sibilo sinistro indica che la riserva dell'aria è ormai ridotta ai minimi termini.\nNon c'è più tempo per i dubbi o inserisci il codice o il vuoto reclamerà la tua anima!\n Leggi le maiuscole">;
+        // FIX SINTASSI: rimosso il ">;" alla fine della stringa
+        const text = ">> Sotto i tuoi piedi, il pavimento della capsula trema mentre i motori tentano un ultimo avvio.\nUn sibilo sinistro indica che la riserva dell'aria è ormai ridotta ai minimi termini.\nNon c'è più tempo per i dubbi o inserisci il codice o il vuoto reclamerà la tua anima!\n Leggi le maiuscole";
         
         hintEl.setAttribute('data-text', text);
         hintEl.style.display = 'block';
         hintEl.innerText = '';
         
         await typeText(hintEl);
+        checkTimeLimit();
     }
 }
 
-// TIMER E ALLARMI
+// TIMER E ALLARMI (Rifatto per funzionare al secondo)
+function checkTimeLimit() {
+    if (totalSeconds <= 0) {
+        totalSeconds = 0;
+        clearInterval(timer);
+        sounds.death();
+        const deathReason = document.getElementById('death-reason');
+        deathReason.setAttribute('data-text', "Livello di ossigeno a zero. Asfissia dell'equipaggio confermata.");
+        changeState('sconfitta');
+    }
+}
+
 function updateTimerDisplay() {
-    const display = document.querySelector('.status');
-    display.innerText = `O2_LEVEL: ${Math.max(0, Math.floor((o2/15)*100))}%`;
-    if (o2 <= 5) {
-        display.classList.add('critical');
-        sounds.alarm();
+    const o2Display = document.querySelector('.status');
+    const timeDisplay = document.querySelector('.time');
+    
+    // Calcolo % O2 (25 minuti * 60 = 1500 sec totali originali)
+    let percentage = Math.max(0, Math.floor((totalSeconds / 1500) * 100));
+    o2Display.innerText = `O2_LEVEL: ${percentage}%`;
+    
+    // Formattazione MM:SS
+    let minutes = Math.floor(Math.max(0, totalSeconds) / 60);
+    let seconds = Math.max(0, totalSeconds) % 60;
+    timeDisplay.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+    if (percentage <= 20) { // Allarme se si scende sotto i 5 minuti
+        o2Display.classList.add('critical');
+        timeDisplay.classList.add('critical'); // Lampeggia anche il timer
     }
 }
 
 function startTimer() {
+    updateTimerDisplay(); // Mostra i 25 minuti iniziali subito
     timer = setInterval(() => {
-        o2--;
+        totalSeconds--;
         updateTimerDisplay();
-        if (o2 <= 0) {
-            clearInterval(timer);
-            sounds.death();
-            const deathReason = document.getElementById('death-reason');
-            deathReason.setAttribute('data-text', "Livello di ossigeno a zero. Asfissia dell'equipaggio confermata.");
-            changeState('sconfitta');
+        
+        // Piccolo allarme periodico quando si è in zona critica (sotto i 5 min)
+        if (totalSeconds > 0 && totalSeconds <= 300 && totalSeconds % 10 === 0) {
+            sounds.alarm();
         }
-    }, 60000); // 1 minuto reale
+        
+        checkTimeLimit();
+    }, 1000); // 1 secondo reale
 }
 
 function simulateReactor() {
