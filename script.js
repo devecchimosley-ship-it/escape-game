@@ -94,7 +94,7 @@ function selectCapsule(choice) {
     if (isTyping) return; 
 
     // FIX LOGICO: La risposta esatta in base al testo è la B, non la A.
-    if (choice === 'B') {
+    if (choice === 'A') {
         sounds.success();
         changeState('sfida4');
     } else {
