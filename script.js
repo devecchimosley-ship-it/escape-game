@@ -178,7 +178,7 @@ function updateTimerDisplay() {
     const timeDisplay = document.querySelector('.time');
     
     // Calcolo % O2 (25 minuti * 60 = 1500 sec totali originali)
-    let percentage = Math.max(0, Math.floor((totalSeconds / 1500) * 100));
+    let percentage = Math.max(0, Math.floor((totalSeconds / 1200) * 100));
     o2Display.innerText = `O2_LEVEL: ${percentage}%`;
     
     // Formattazione MM:SS
