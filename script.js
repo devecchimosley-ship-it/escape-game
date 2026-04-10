@@ -1,7 +1,7 @@
 let audioCtx;
 const codes = { sfida1: "135", sfida2: "6", sfida4: "780" };
 let currentState = 'login';
-let totalSeconds = 25 * 60; // 25 minuti convertiti in secondi
+let totalSeconds = 20 * 60; // 20 minuti convertiti in secondi
 let timer;
 let isTyping = false;
 
@@ -94,7 +94,7 @@ function selectCapsule(choice) {
     if (isTyping) return; 
 
     // FIX LOGICO: La risposta esatta in base al testo è la B, non la A.
-    if (choice === 'B') {
+    if (choice === 'A') {
         sounds.success();
         changeState('sfida4');
     } else {
