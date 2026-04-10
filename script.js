@@ -149,13 +149,13 @@ async function showHint(level) {
         hintBtn.style.display = 'none'; 
         
         // Penalità O2
-        o2 -= 5;
+        o2 -=5;
         updateTimerDisplay();
         
         // Suono d'allarme per l'ansia
         sounds.alarm(); 
         
-        const text = ">> Sotto i tuoi piedi, il pavimento della capsula trema mentre i motori tentano un ultimo avvio.\nUn sibilo sinistro indica che la riserva dell'aria è ormai ridotta ai minimi termini.\nNon c'è più tempo per i dubbi o inserisci il codice o il vuoto reclamerà la tua anima!\n <strong> Leggi le maiuscole</strong>";
+        const text = ">> Sotto i tuoi piedi, il pavimento della capsula trema mentre i motori tentano un ultimo avvio.\nUn sibilo sinistro indica che la riserva dell'aria è ormai ridotta ai minimi termini.\nNon c'è più tempo per i dubbi o inserisci il codice o il vuoto reclamerà la tua anima!\n Leggi le maiuscole";
         
         hintEl.setAttribute('data-text', text);
         hintEl.style.display = 'block';
