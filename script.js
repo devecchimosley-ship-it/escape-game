@@ -144,18 +144,27 @@ function checkCode() {
 }
 
 async function showHint(level) {
-    if (isTyping) return;
+    if (isTyping) return; // Evita bug se il testo sta ancora scrivendo
+    
     if (level === 1) {
+        // 1. Nascondi il pulsante per evitare doppie attivazioni
         document.getElementById('btn-indizio-1').style.display = 'none';
+        
+        // 2. Detrai il tempo (5 minuti = 300 secondi)
         totalSeconds -= 300;
         updateTimerDisplay();
         sounds.alarm(); 
+
+        // 3. Prepara il testo del suggerimento
         const hintEl = document.getElementById('hint-1');
-        const text = ">> ANALISI SISTEMA: Leggi le lettere MAIUSCOLE del messaggio di sistema...";
-        hintEl.setAttribute('data-text', text);
+        const hintText = ">> ANALISI SISTEMA: La soluzione dell'enigma è la LUCE. In inglese si scrive 'SUN'. S=19, U=21, N=14.";
+        
+        // 4. Mostra e avvia l'effetto macchina da scrivere
+        hintEl.setAttribute('data-text', hintText);
         hintEl.style.display = 'block';
-        hintEl.innerText = '';
+        hintEl.innerText = ''; // Pulisce il testo prima di scrivere
         await typeText(hintEl);
+        
         checkTimeLimit();
     }
 }
