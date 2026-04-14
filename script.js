@@ -1,7 +1,8 @@
 let audioCtx;
 const codes = { sfida1: "135", sfida2: "6", sfida4: "780" };
+const ADMIN_PASS = "mosley0789"; // Password richiesta per il reset
 let currentState = 'login';
-let totalSeconds = 20 * 60; // 20 minuti convertiti in secondi
+let totalSeconds = 20 * 60; 
 let timer;
 let isTyping = false;
 
@@ -25,23 +26,19 @@ function playSfx(freq, type, dur, vol = 0.1) {
 
 const sounds = {
     type: () => playSfx(Math.random() * 100 + 600, 'square', 0.05, 0.01),
-    success: () => { playSfx(800, 'sine', 0.2); setTimeout(() => playSfx(1200, 0.3), 100); },
+    success: () => { playSfx(800, 'sine', 0.2); setTimeout(() => playSfx(1200, 'sine', 0.3), 100); },
     error: () => playSfx(150, 'sawtooth', 0.6, 0.3),
     alarm: () => { playSfx(1000, 'square', 0.1, 0.05); setTimeout(() => playSfx(800, 'square', 0.1, 0.05), 150); },
     death: () => playSfx(50, 'sawtooth', 2.0, 0.5)
 };
 
-// --- TYPEWRITER EFFECT (RIGA PER RIGA) ---
+// --- TYPEWRITER EFFECT ---
 async function triggerStateTyping(stateId) {
     const paragraphs = document.querySelectorAll(`#${stateId} .typewriter`);
-    
     paragraphs.forEach(p => {
-        if (!p.getAttribute('data-text')) {
-            p.setAttribute('data-text', p.innerText); 
-        }
+        if (!p.getAttribute('data-text')) p.setAttribute('data-text', p.innerText); 
         p.innerText = ''; 
     });
-
     for (let p of paragraphs) {
         if (p.id.startsWith('hint-') && p.style.display === 'none') continue;
         await typeText(p);
@@ -51,170 +48,162 @@ async function triggerStateTyping(stateId) {
 async function typeText(element) {
     isTyping = true;
     const text = element.getAttribute('data-text');
-    
     for (let i = 0; i < text.length; i++) {
         const char = text.charAt(i);
-        
-        if (char === '\n') {
-            element.innerHTML += '<br>';
-        } else {
+        if (char === '\n') element.innerHTML += '<br>';
+        else {
             element.innerHTML += char;
             if (char !== ' ') sounds.type();
         }
-        
         await new Promise(r => setTimeout(r, 20)); 
     }
     isTyping = false;
+}
+
+// --- CLASSIFICA LOGIC ---
+function saveRecord(teamName, timeLeft) {
+    let leaderboard = JSON.parse(localStorage.getItem('icarus_records')) || [];
+    leaderboard.push({ name: teamName, time: timeLeft });
+    leaderboard.sort((a, b) => b.time - a.time); // Ordina per tempo residuo maggiore
+    leaderboard = leaderboard.slice(0, 5); // Tieni i primi 5
+    localStorage.setItem('icarus_records', JSON.stringify(leaderboard));
+}
+
+function displayLeaderboard() {
+    const listEl = document.getElementById('leaderboard-list');
+    const leaderboard = JSON.parse(localStorage.getItem('icarus_records')) || [];
+    if (leaderboard.length === 0) {
+        listEl.innerText = "NESSUN RECORD RILEVATO NEL DATABASE.";
+    } else {
+        let html = "<div style='text-align: left; font-family: monospace;'>";
+        leaderboard.forEach((entry, index) => {
+            let min = Math.floor(entry.time / 60);
+            let sec = entry.time % 60;
+            html += `${index + 1}. ${entry.name.padEnd(15, '_')} O2 RESIDUO: ${min}:${sec.toString().padStart(2, '0')}<br>`;
+        });
+        html += "</div>";
+        listEl.innerHTML = html;
+    }
 }
 
 // --- CORE LOGIC ---
 function changeState(newState) {
     const current = document.querySelector('.terminal-state.active');
     if (current) current.classList.remove('active');
-    
     const next = document.getElementById(`state-${newState}`);
     next.classList.add('active');
     currentState = newState;
-
     triggerStateTyping(`state-${newState}`);
 
     const inputArea = document.getElementById('input-area');
-    if (newState === 'sfida1' || newState === 'sfida2' || newState === 'sfida4') {
+    if (['sfida1', 'sfida2', 'sfida4'].includes(newState)) {
         inputArea.classList.add('active');
         document.getElementById('code-input').focus();
     } else {
         inputArea.classList.remove('active');
     }
-
     if (newState === 'sfida2') simulateReactor();
+    if (newState === 'classifica') displayLeaderboard();
 }
 
-// GESTIONE CAPSULE 
 function selectCapsule(choice) {
     if (isTyping) return; 
-
-    // FIX LOGICO: La risposta esatta in base al testo è la B, non la A.
-    if (choice === 'A') {
+    if (choice === 'A') { // Nel tuo script originale la risposta corretta era impostata su A
         sounds.success();
         changeState('sfida4');
     } else {
         sounds.death();
         clearInterval(timer);
-        
         const deathReason = document.getElementById('death-reason');
-        deathReason.setAttribute('data-text', `ERRORE CRITICO: La capsula ${choice} era compromessa. Decompressione hangar avvenuta. Equipaggio eliminato.`);
-        deathReason.classList.add('typewriter');
-        
+        deathReason.setAttribute('data-text', `ERRORE CRITICO: La capsula ${choice} era compromessa. Decompressione hangar avvenuta.`);
         changeState('sconfitta');
     }
 }
 
 function checkCode() {
     if (isTyping) return;
-
     const val = document.getElementById('code-input').value.trim().toUpperCase();
     if (val === codes[currentState]) {
         sounds.success();
         document.getElementById('code-input').value = '';
-        
         if (currentState === 'sfida1') changeState('sfida2');
         else if (currentState === 'sfida2') changeState('sfida3');
         else if (currentState === 'sfida4') {
             clearInterval(timer);
+            const team = document.getElementById('team-name').value || "SCONOSCIUTO";
+            saveRecord(team, totalSeconds);
             changeState('vittoria');
         }
     } else {
         sounds.error();
         document.getElementById('code-input').value = '';
-        
-        // Penalità di tempo (-60 secondi) per ogni codice sbagliato
         totalSeconds -= 60;
         updateTimerDisplay();
         checkTimeLimit();
     }
 }
 
-// --- SISTEMA INDIZI AD ALTA TENSIONE ---
 async function showHint(level) {
     if (isTyping) return;
-
     if (level === 1) {
-        const hintBtn = document.getElementById('btn-indizio-1');
-        const hintEl = document.getElementById('hint-1');
-        
-        hintBtn.style.display = 'none'; 
-        
-        // Penalità O2 (-300 secondi / 5 min)
+        document.getElementById('btn-indizio-1').style.display = 'none';
         totalSeconds -= 300;
         updateTimerDisplay();
         sounds.alarm(); 
-        
-        // FIX SINTASSI: rimosso il ">;" alla fine della stringa
-        const text = ">> Sotto i tuoi piedi, il pavimento della capsula trema mentre i motori tentano un ultimo avvio.\nUn sibilo sinistro indica che la riserva dell'aria è ormai ridotta ai minimi termini.\nNon c'è più tempo per i dubbi o inserisci il codice o il vuoto reclamerà la tua anima!\n Leggi le maiuscole";
-        
+        const hintEl = document.getElementById('hint-1');
+        const text = ">> ANALISI SISTEMA: Leggi le lettere MAIUSCOLE del messaggio di sistema...";
         hintEl.setAttribute('data-text', text);
         hintEl.style.display = 'block';
         hintEl.innerText = '';
-        
         await typeText(hintEl);
         checkTimeLimit();
-    }
-}
-
-// TIMER E ALLARMI (Rifatto per funzionare al secondo)
-function checkTimeLimit() {
-    if (totalSeconds <= 0) {
-        totalSeconds = 0;
-        clearInterval(timer);
-        sounds.death();
-        const deathReason = document.getElementById('death-reason');
-        deathReason.setAttribute('data-text', "Livello di ossigeno a zero. Asfissia dell'equipaggio confermata.");
-        changeState('sconfitta');
     }
 }
 
 function updateTimerDisplay() {
     const o2Display = document.querySelector('.status');
     const timeDisplay = document.querySelector('.time');
-    
-    // Calcolo % O2 (25 minuti * 60 = 1500 sec totali originali)
     let percentage = Math.max(0, Math.floor((totalSeconds / 1200) * 100));
     o2Display.innerText = `O2_LEVEL: ${percentage}%`;
-    
-    // Formattazione MM:SS
     let minutes = Math.floor(Math.max(0, totalSeconds) / 60);
     let seconds = Math.max(0, totalSeconds) % 60;
     timeDisplay.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-
-    if (percentage <= 20) { // Allarme se si scende sotto i 5 minuti
+    if (percentage <= 20) {
         o2Display.classList.add('critical');
-        timeDisplay.classList.add('critical'); // Lampeggia anche il timer
+        timeDisplay.classList.add('critical');
+    }
+}
+
+function checkTimeLimit() {
+    if (totalSeconds <= 0) {
+        clearInterval(timer);
+        sounds.death();
+        document.getElementById('death-reason').setAttribute('data-text', "Livello di ossigeno a zero. Asfissia confermata.");
+        changeState('sconfitta');
     }
 }
 
 function startTimer() {
-    updateTimerDisplay(); // Mostra i 25 minuti iniziali subito
+    updateTimerDisplay();
     timer = setInterval(() => {
         totalSeconds--;
         updateTimerDisplay();
-        
-        // Piccolo allarme periodico quando si è in zona critica (sotto i 5 min)
-        if (totalSeconds > 0 && totalSeconds <= 300 && totalSeconds % 10 === 0) {
-            sounds.alarm();
-        }
-        
+        if (totalSeconds <= 300 && totalSeconds % 10 === 0) sounds.alarm();
         checkTimeLimit();
-    }, 1000); // 1 secondo reale
+    }, 1000);
 }
 
 function simulateReactor() {
     const el = document.querySelector('.reattore-val');
     if(el) {
-        setInterval(() => { if(currentState === 'sfida2') el.innerText = Math.floor(Math.random() * 900 + 100); }, 100);
+        const rInterval = setInterval(() => { 
+            if(currentState !== 'sfida2') clearInterval(rInterval);
+            else el.innerText = Math.floor(Math.random() * 900 + 100); 
+        }, 100);
     }
 }
 
-// EVENTS
+// --- EVENT LISTENERS ---
 document.getElementById('login-btn').addEventListener('click', () => {
     initAudio();
     changeState('intro');
@@ -226,6 +215,21 @@ document.querySelector('.start-btn').addEventListener('click', () => {
 });
 
 document.getElementById('submit-code').addEventListener('click', checkCode);
-document.getElementById('code-input').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') checkCode();
+document.getElementById('code-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') checkCode(); });
+
+document.getElementById('view-leaderboard-btn').addEventListener('click', () => {
+    changeState('classifica');
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+    const pass = document.getElementById('admin-pass').value;
+    if (pass === ADMIN_PASS) {
+        localStorage.removeItem('icarus_records');
+        alert("DATABASE RESETTATO.");
+        displayLeaderboard();
+        document.getElementById('admin-pass').value = '';
+    } else {
+        sounds.error();
+        alert("PASSWORD ERRATA.");
+    }
 });
