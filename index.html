@@ -104,6 +104,19 @@
                     <p class="typewriter">>> LOG: Sequenza di eiezione avviata.</p>
                     <p class="typewriter">Siete fuori dalla portata dell'esplosione. L'ICARUS-7 sta collassando.</p>
                     <p class="typewriter highlight">Bentornati a casa, equipaggio.</p>
+                    <button class="terminal-btn" id="view-leaderboard-btn">VEDI CLASSIFICA</button>
+                </section>
+
+                <section id="state-classifica" class="terminal-state">
+                    <h2 class="matrix-glitch">TOP RECORDS ICARUS</h2>
+                    <div id="leaderboard-list" class="typewriter" style="margin: 20px 0; border: 1px solid var(--m-green); padding: 15px;">
+                        </div>
+                    <div class="form-group" style="border-top: 1px dashed var(--m-green); padding-top: 20px;">
+                        <p class="typewriter">AREA AMMINISTRATORE:</p>
+                        <input type="password" id="admin-pass" placeholder="PASSWORD_RESET" autocomplete="off">
+                        <button class="terminal-btn btn-danger" id="reset-btn">RESETTA DATABASE</button>
+                    </div>
+                    <button class="terminal-btn" onclick="location.reload()">RIAVVIA SISTEMA</button>
                 </section>
 
                 <section id="state-sconfitta" class="terminal-state">
