@@ -157,7 +157,7 @@ async function showHint(level) {
 
         // 3. Prepara il testo del suggerimento
         const hintEl = document.getElementById('hint-1');
-        const hintText = ">> ANALISI SISTEMA: La soluzione dell'enigma è la SOLE. In inglese si scrive 'SUN'. S=19, U=21, N=14.";
+        const hintText = ">> ANALISI SISTEMA: La soluzione dell'enigma è il SOLE. In inglese si scrive 'SUN'. S=19, U=21, N=14.";
         
         // 4. Mostra e avvia l'effetto macchina da scrivere
         hintEl.setAttribute('data-text', hintText);
